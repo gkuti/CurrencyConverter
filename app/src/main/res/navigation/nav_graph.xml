@@ -19,7 +19,7 @@
     <fragment
         android:id="@+id/historyFragment"
         android:name="com.gamik.currencyconverter.ui.history.HistoryFragment"
-        android:label="HistoryFragment">
+        android:label="History">
         <argument
             android:name="baseCurrency"
             app:argType="string" />

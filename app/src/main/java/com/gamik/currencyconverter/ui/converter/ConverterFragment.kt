@@ -11,6 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.gamik.currencyconverter.R
 import com.gamik.currencyconverter.databinding.FragmentConverterBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,6 +81,23 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             binding.baseCurrency.setSelection(binding.targetCurrency.selectedItemPosition)
             binding.targetCurrency.setSelection(temp)
         }
+        binding.details.setOnClickListener {
+            launchHistoryFragment()
+        }
+    }
+
+    private fun launchHistoryFragment() {
+        val action =
+            ConverterFragmentDirections.actionConverterFragmentToHistoryFragment(
+                binding.baseCurrency.selectedItem.toString(),
+                binding.targetCurrency.selectedItem.toString(),
+                symbols.filterNot {
+                    it == binding.baseCurrency.selectedItem.toString() ||
+                            it == binding.targetCurrency.selectedItem.toString()
+                }
+                    .take(10).toTypedArray()
+            )
+        findNavController().navigate(action)
     }
 
     private fun setUpTextChangeListeners() {
