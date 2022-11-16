@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Currency Converter</string>
+    <string name="currency_swap_icon">currency swap icon</string>
+    <string name="figure_1">1</string>
+    <string name="details">DETAILS</string>
+    <string name="digit_0_0">0.0</string>
 </resources>
