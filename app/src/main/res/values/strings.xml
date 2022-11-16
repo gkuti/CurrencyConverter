@@ -4,4 +4,6 @@
     <string name="figure_1">1</string>
     <string name="details">DETAILS</string>
     <string name="digit_0_0">0.0</string>
+    <string name="three_day_rate">3 day Rate</string>
+    <string name="other_currencies">Other Currencies</string>
 </resources>

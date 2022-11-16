@@ -7,5 +7,27 @@
     <fragment
         android:id="@+id/converterFragment"
         android:name="com.gamik.currencyconverter.ui.converter.ConverterFragment"
-        android:label="Converter" />
+        android:label="Converter">
+        <action
+            android:id="@+id/action_converterFragment_to_historyFragment"
+            app:destination="@id/historyFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+    </fragment>
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.gamik.currencyconverter.ui.history.HistoryFragment"
+        android:label="HistoryFragment">
+        <argument
+            android:name="baseCurrency"
+            app:argType="string" />
+        <argument
+            android:name="targetCurrency"
+            app:argType="string" />
+        <argument
+            android:name="symbols"
+            app:argType="string[]" />
+    </fragment>
 </navigation>
