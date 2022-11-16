@@ -1,6 +1,8 @@
 package com.gamik.currencyconverter.ui.converter
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -19,16 +21,57 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
     private lateinit var binding: FragmentConverterBinding
     private lateinit var symbols: List<String>
     private val viewModel: ConverterViewModel by viewModels()
+    private var currentRate = 0.0
+
+    private val baseTextListener: TextWatcher = object : TextWatcher {
+        override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            //Not required for functionality
+        }
+
+        override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            binding.targetValue.removeTextChangedListener(targetTextListener)
+            binding.targetValue.setText(
+                if (binding.baseValue.text.isBlank()) "0.0" else
+                    (binding.baseValue.text.toString().toDouble() * currentRate).toString()
+            )
+            binding.targetValue.addTextChangedListener(targetTextListener)
+        }
+
+        override fun afterTextChanged(p0: Editable?) {
+            //Not required for functionality
+        }
+    }
+
+    private val targetTextListener: TextWatcher = object : TextWatcher {
+        override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            //Not required for functionality
+        }
+
+        override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            binding.baseValue.removeTextChangedListener(baseTextListener)
+            binding.baseValue.setText(
+                if (binding.targetValue.text.isBlank()) "0.0" else
+                    (binding.targetValue.text.toString().toDouble() / currentRate).toString()
+            )
+            binding.baseValue.addTextChangedListener(baseTextListener)
+        }
+
+        override fun afterTextChanged(p0: Editable?) {
+            //Not required for functionality
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentConverterBinding.bind(view)
         setUpObserver()
         setUpClickListeners()
+        setUpTextChangeListeners()
     }
 
     private fun setUpObserver() {
         symbolObserver()
+        rateObserver()
     }
 
     private fun setUpClickListeners() {
@@ -37,6 +80,11 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             binding.baseCurrency.setSelection(binding.targetCurrency.selectedItemPosition)
             binding.targetCurrency.setSelection(temp)
         }
+    }
+
+    private fun setUpTextChangeListeners() {
+        binding.baseValue.addTextChangedListener(baseTextListener)
+        binding.targetValue.addTextChangedListener(targetTextListener)
     }
 
     private fun symbolObserver() {
@@ -60,10 +108,31 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
         }
     }
 
+    private fun rateObserver() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.rateViewState.collect { viewState ->
+                    when (viewState) {
+                        is RatesViewState.Success -> {
+                            currentRate = viewState.rate
+                            updateTarget()
+                        }
+                        RatesViewState.Error -> {
+
+                        }
+                        RatesViewState.Loading -> {
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun setSymbolListeners() {
         binding.baseCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-
+                getRates()
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
@@ -72,11 +141,26 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
         binding.targetCurrency.onItemSelectedListener = object :
             AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-
+                getRates()
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }
+        }
+    }
+
+    private fun getRates() {
+        if (binding.baseCurrency.selectedItemPosition != binding.targetCurrency.selectedItemPosition) {
+            //Using 1 as amount so as to not always do an api call if currency doesn't change
+            //Conversion of other values will be done locally
+            //NB:Depending on the business requirement this may change
+            viewModel.convert(
+                binding.baseCurrency.selectedItem.toString(),
+                binding.targetCurrency.selectedItem.toString(),
+                1.0
+            )
+        } else {
+            binding.targetValue.text = binding.baseValue.text
         }
     }
 
@@ -91,5 +175,13 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
         binding.targetCurrency.setSelection(0, false)
         binding.baseCurrency.setSelection(0, false)
         setSymbolListeners()
+    }
+
+    private fun updateTarget() {
+        //Skip first initialization as initialize in the view model
+        if (currentRate == -0.0) return
+        binding.targetValue.setText(
+            (binding.baseValue.text.toString().toDouble() * currentRate).toString()
+        )
     }
 }

@@ -18,6 +18,10 @@ class ConverterViewModel @Inject constructor(
         MutableStateFlow<SymbolViewState>(SymbolViewState.Success(SymbolResponse(true, emptyMap())))
     val symbolViewState: StateFlow<SymbolViewState> = _symbolViewState
 
+    private val _rateViewState =
+        MutableStateFlow<RatesViewState>(RatesViewState.Success(-0.0))
+    val rateViewState: StateFlow<RatesViewState> = _rateViewState
+
     init {
         fetchSymbols()
     }
@@ -35,10 +39,30 @@ class ConverterViewModel @Inject constructor(
             }
         }
     }
+
+    fun convert(from: String, to: String, amount: Double) {
+        _rateViewState.value = RatesViewState.Loading
+
+        viewModelScope.launch {
+            runCatching {
+                usecase.convert(from, to, amount)
+            }.onFailure {
+                _rateViewState.value = RatesViewState.Error
+            }.onSuccess {
+                _rateViewState.value = RatesViewState.Success(it.result)
+            }
+        }
+    }
 }
 
 sealed class SymbolViewState {
     object Loading : SymbolViewState()
     object Error : SymbolViewState()
     data class Success(val response: SymbolResponse) : SymbolViewState()
+}
+
+sealed class RatesViewState {
+    object Loading : RatesViewState()
+    object Error : RatesViewState()
+    data class Success(val rate: Double) : RatesViewState()
 }
