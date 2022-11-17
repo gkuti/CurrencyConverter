@@ -11,6 +11,8 @@ import androidx.navigation.fragment.navArgs
 import com.gamik.currencyconverter.R
 import com.gamik.currencyconverter.databinding.FragmentHistoryBinding
 import com.gamik.currencyconverter.util.DateUtil
+import com.gamik.currencyconverter.util.Message
+import com.gamik.domain.util.Result
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -25,6 +27,10 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentHistoryBinding.bind(view)
         historyObserver()
+        getHistory()
+    }
+
+    private fun getHistory() {
         viewModel.getHistory(
             DateUtil.threeDaysAgo(),
             DateUtil.today(),
@@ -38,16 +44,19 @@ class HistoryFragment : Fragment(R.layout.fragment_history) {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.historyViewState.collect { viewState ->
                     when (viewState) {
-                        is HistoryViewState.Success -> {
-                            rates = viewState.response.rates
+                        is Result.Success -> {
+                            rates = viewState.data?.rates ?: emptyMap()
                             showHistory()
-                            println(viewState.response)
                         }
-                        HistoryViewState.Error -> {
-
+                        is Result.Failure -> {
+                            Message.show(
+                                requireContext(), viewState.error.message, getString(R.string.retry)
+                            ) { _, _ -> getHistory() }
                         }
-                        HistoryViewState.Loading -> {
-
+                        Result.Loading -> {
+                            Message.show(
+                                requireContext(), getString(R.string.getting_details)
+                            )
                         }
                     }
                 }

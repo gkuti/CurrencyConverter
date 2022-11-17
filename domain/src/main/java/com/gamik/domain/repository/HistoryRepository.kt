@@ -1,6 +1,8 @@
 package com.gamik.domain.repository
 
 import com.gamik.domain.model.HistoryResponse
+import com.gamik.domain.util.Result
+import kotlinx.coroutines.flow.Flow
 
 interface HistoryRepository {
     suspend fun getHistory(
@@ -8,5 +10,5 @@ interface HistoryRepository {
         endDate: String,
         base: String,
         symbol: String
-    ): HistoryResponse
+    ): Flow<Result<HistoryResponse>>
 }

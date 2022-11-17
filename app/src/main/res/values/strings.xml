@@ -9,6 +9,7 @@
     <string name="fetching_currencies">Fetching currencies</string>
     <string name="select_currencies">Select the different currencies</string>
     <string name="getting_conversion_rate">Getting conversion rate</string>
+    <string name="getting_details">Getting details</string>
     <string name="retry">Retry</string>
     <string name="cancel">Cancel</string>
 </resources>
