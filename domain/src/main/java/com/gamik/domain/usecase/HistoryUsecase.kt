@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class HistoryUsecase @Inject constructor(private val historyRepository: HistoryRepository) {
-    suspend fun getHistory(
+    fun getHistory(
         startDate: String, endDate: String, base: String, symbol: String
-    ): Flow<Result<HistoryResponse>> = historyRepository.getHistory(startDate, endDate, base, symbol)
+    ): Flow<Result<HistoryResponse>> =
+        historyRepository.getHistory(startDate, endDate, base, symbol)
 }

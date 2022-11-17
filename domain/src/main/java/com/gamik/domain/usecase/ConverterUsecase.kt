@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class ConverterUsecase @Inject constructor(private val converterRepository: ConverterRepository) {
-    suspend fun getSymbols(): Flow<Result<SymbolResponse>> =
+    fun getSymbols(): Flow<Result<SymbolResponse>> =
         converterRepository.getSymbols()
 
-    suspend fun convert(from: String, to: String, amount: Double): Flow<Result<ConvertResponse>> =
+    fun convert(from: String, to: String, amount: Double): Flow<Result<ConvertResponse>> =
         converterRepository.convert(from, to, amount)
 }

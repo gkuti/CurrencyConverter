@@ -16,7 +16,7 @@ import javax.inject.Inject
 class ConverterRepositoryImpl @Inject constructor(
     private val currencyService: CurrencyService
 ) : ConverterRepository {
-    override suspend fun getSymbols(): Flow<Result<SymbolResponse>> = flow {
+    override fun getSymbols(): Flow<Result<SymbolResponse>> = flow {
         val result = withContext(Dispatchers.IO) {
             apiCall {
                 currencyService.getSymbols()
@@ -25,7 +25,7 @@ class ConverterRepositoryImpl @Inject constructor(
         emit(result)
     }.applyCommonSideEffects()
 
-    override suspend fun convert(
+    override fun convert(
         from: String,
         to: String,
         amount: Double

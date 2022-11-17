@@ -15,7 +15,7 @@ import javax.inject.Inject
 class HistoryRepositoryImpl @Inject constructor(
     private val currencyService: CurrencyService
 ) : HistoryRepository {
-    override suspend fun getHistory(
+    override fun getHistory(
         startDate: String,
         endDate: String,
         base: String,

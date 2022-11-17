@@ -5,7 +5,7 @@ import com.gamik.domain.util.Result
 import kotlinx.coroutines.flow.Flow
 
 interface HistoryRepository {
-    suspend fun getHistory(
+    fun getHistory(
         startDate: String,
         endDate: String,
         base: String,
