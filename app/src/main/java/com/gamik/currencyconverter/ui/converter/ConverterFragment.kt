@@ -14,8 +14,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.gamik.currencyconverter.R
 import com.gamik.currencyconverter.databinding.FragmentConverterBinding
+import com.gamik.currencyconverter.util.Message
+import com.gamik.domain.util.Result
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 
 @AndroidEntryPoint
 class ConverterFragment : Fragment(R.layout.fragment_converter) {
@@ -30,10 +33,12 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
         }
 
         override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            //Skip first initialization
+            if (currentRate == 0.0) return
             binding.targetValue.removeTextChangedListener(targetTextListener)
             binding.targetValue.setText(
-                if (binding.baseValue.text.isBlank()) "0.0" else
-                    (binding.baseValue.text.toString().toDouble() * currentRate).toString()
+                if (binding.baseValue.text.isBlank()) "0.0" else (binding.baseValue.text.toString()
+                    .toDouble() * currentRate).toString()
             )
             binding.targetValue.addTextChangedListener(targetTextListener)
         }
@@ -49,10 +54,12 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
         }
 
         override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            //Skip first initialization
+            if (currentRate == 0.0) return
             binding.baseValue.removeTextChangedListener(baseTextListener)
             binding.baseValue.setText(
-                if (binding.targetValue.text.isBlank()) "0.0" else
-                    (binding.targetValue.text.toString().toDouble() / currentRate).toString()
+                if (binding.targetValue.text.isBlank()) "0.0" else (binding.targetValue.text.toString()
+                    .toDouble() / currentRate).toString()
             )
             binding.baseValue.addTextChangedListener(baseTextListener)
         }
@@ -87,15 +94,16 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
     }
 
     private fun launchHistoryFragment() {
+        if ((binding.baseCurrency.selectedItemPosition - binding.targetCurrency.selectedItemPosition).absoluteValue < 1) {
+            Message.show(requireContext(), getString(R.string.select_currencies))
+            return
+        }
         val action =
-            ConverterFragmentDirections.actionConverterFragmentToHistoryFragment(
-                binding.baseCurrency.selectedItem.toString(),
+            ConverterFragmentDirections.actionConverterFragmentToHistoryFragment(binding.baseCurrency.selectedItem.toString(),
                 binding.targetCurrency.selectedItem.toString(),
                 symbols.filterNot {
-                    it == binding.baseCurrency.selectedItem.toString() ||
-                            it == binding.targetCurrency.selectedItem.toString()
-                }
-                    .take(10).toTypedArray()
+                    it == binding.baseCurrency.selectedItem.toString() || it == binding.targetCurrency.selectedItem.toString()
+                }.take(10).toTypedArray()
             )
         findNavController().navigate(action)
     }
@@ -110,15 +118,17 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.symbolViewState.collect { viewState ->
                     when (viewState) {
-                        is SymbolViewState.Success -> {
-                            symbols = viewState.response.symbols.keys.toList()
+                        is Result.Success -> {
+                            symbols = viewState.data?.symbols?.keys?.toList() ?: emptyList()
                             populateCurrencyList()
                         }
-                        SymbolViewState.Error -> {
-
+                        is Result.Failure -> {
+                            Message.show(
+                                requireContext(), viewState.error.message, getString(R.string.retry)
+                            ) { _, _ -> viewModel.fetchSymbols() }
                         }
-                        SymbolViewState.Loading -> {
-
+                        Result.Loading -> {
+                            Message.show(requireContext(), getString(R.string.fetching_currencies))
                         }
                     }
                 }
@@ -131,15 +141,19 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.rateViewState.collect { viewState ->
                     when (viewState) {
-                        is RatesViewState.Success -> {
-                            currentRate = viewState.rate
+                        is Result.Success -> {
+                            currentRate = viewState.data?.result ?: 0.0
                             updateTarget()
                         }
-                        RatesViewState.Error -> {
-
+                        is Result.Failure -> {
+                            Message.show(
+                                requireContext(), viewState.error.message, getString(R.string.retry)
+                            ) { _, _ -> getRates() }
                         }
-                        RatesViewState.Loading -> {
-
+                        Result.Loading -> {
+                            Message.show(
+                                requireContext(), getString(R.string.getting_conversion_rate)
+                            )
                         }
                     }
                 }
@@ -156,15 +170,15 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }
         }
-        binding.targetCurrency.onItemSelectedListener = object :
-            AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                getRates()
-            }
+        binding.targetCurrency.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                    getRates()
+                }
 
-            override fun onNothingSelected(p0: AdapterView<*>?) {
+                override fun onNothingSelected(p0: AdapterView<*>?) {
+                }
             }
-        }
     }
 
     private fun getRates() {
@@ -178,6 +192,8 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
                 1.0
             )
         } else {
+            //Skip first initialization
+            if (currentRate == 0.0) return
             binding.targetValue.text = binding.baseValue.text
         }
     }
@@ -196,8 +212,8 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
     }
 
     private fun updateTarget() {
-        //Skip first initialization as initialize in the view model
-        if (currentRate == -0.0) return
+        //Skip first initialization
+        if (currentRate == 0.0) return
         binding.targetValue.setText(
             (binding.baseValue.text.toString().toDouble() * currentRate).toString()
         )

@@ -6,4 +6,9 @@
     <string name="digit_0_0">0.0</string>
     <string name="three_day_rate">3 day Rate</string>
     <string name="other_currencies">Other Currencies</string>
+    <string name="fetching_currencies">Fetching currencies</string>
+    <string name="select_currencies">Select the different currencies</string>
+    <string name="getting_conversion_rate">Getting conversion rate</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
 </resources>
