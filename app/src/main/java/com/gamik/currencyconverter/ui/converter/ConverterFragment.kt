@@ -99,7 +99,8 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             return
         }
         val action =
-            ConverterFragmentDirections.actionConverterFragmentToHistoryFragment(binding.baseCurrency.selectedItem.toString(),
+            ConverterFragmentDirections.actionConverterFragmentToHistoryFragment(
+                binding.baseCurrency.selectedItem.toString(),
                 binding.targetCurrency.selectedItem.toString(),
                 symbols.filterNot {
                     it == binding.baseCurrency.selectedItem.toString() || it == binding.targetCurrency.selectedItem.toString()
@@ -206,8 +207,10 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
             binding.targetCurrency.adapter = adapter
             binding.baseCurrency.adapter = adapter
         }
-        binding.targetCurrency.setSelection(0, false)
-        binding.baseCurrency.setSelection(0, false)
+
+        viewModel.rateViewState.value
+        binding.baseCurrency.setSelection(viewModel.baseCurrency, false)
+        binding.targetCurrency.setSelection(viewModel.targetCurrency, false)
         setSymbolListeners()
     }
 
@@ -217,5 +220,11 @@ class ConverterFragment : Fragment(R.layout.fragment_converter) {
         binding.targetValue.setText(
             (binding.baseValue.text.toString().toDouble() * currentRate).toString()
         )
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.baseCurrency = binding.baseCurrency.selectedItemPosition
+        viewModel.targetCurrency = binding.targetCurrency.selectedItemPosition
     }
 }

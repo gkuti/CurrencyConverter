@@ -23,6 +23,8 @@ class ConverterViewModel @Inject constructor(
     private val _rateViewState =
         MutableStateFlow<Result<ConvertResponse>>(Result.Success(null))
     val rateViewState: StateFlow<Result<ConvertResponse>> = _rateViewState
+    var baseCurrency: Int = 0
+    var targetCurrency: Int = 0
 
     init {
         fetchSymbols()
